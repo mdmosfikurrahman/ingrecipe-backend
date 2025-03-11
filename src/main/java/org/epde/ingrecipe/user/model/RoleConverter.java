@@ -1,0 +1,24 @@
+package org.epde.ingrecipe.user.model;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+
+@Converter(autoApply = true)
+public class RoleConverter implements AttributeConverter<Role, Long> {
+
+    @Override
+    public Long convertToDatabaseColumn(Role role) {
+        if (role == null) {
+            return null;
+        }
+        return role.getValue();
+    }
+
+    @Override
+    public Role convertToEntityAttribute(Long value) {
+        if (value == null) {
+            return null;
+        }
+        return Role.fromValue(value);
+    }
+}

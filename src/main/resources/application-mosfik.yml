@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://dpg-cv85jg1c1ekc73a7jhjg-a.oregon-postgres.render.com/ingrecipe_db
+    username: mosfik
+    password: rCjjD6X1EIrf56tIZxaMTawLPGR2IAEU
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: iNgReCiPe

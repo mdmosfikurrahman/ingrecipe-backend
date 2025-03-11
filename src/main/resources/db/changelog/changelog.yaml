@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_table_users
+      author: mosfik
+      comment: "This changeset creates Users Table"
+      changes:
+        - sqlFile:
+            path: db/changelog/data/create_table_users.sql
+
+  - changeSet:
+      id: create_table_token_blacklist
+      author: mosfik
+      comment: "This changeset creates Token Black List Table"
+      changes:
+        - sqlFile:
+            path: db/changelog/data/create_table_token_blacklist.sql

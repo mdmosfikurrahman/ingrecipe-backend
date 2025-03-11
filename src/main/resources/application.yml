@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: ingrecipe-backend
+
+  profiles:
+    active: mosfik  # Loads 'application-mosfik.yml' automatically
+
+  main:
+    allow-bean-definition-overriding: true
+
+  jpa:
+    show-sql: false
+    open-in-view: false
+
+  liquibase:
+    change-log: classpath:db/changelog/changelog.yaml
+    enabled: true
+
+  task:
+    scheduling:
+      pool:
+        size: 10
+
+server:
+  port: 8888
+  servlet:
+    context-path: /api/v1
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd hh:mm:ss a} | %highlight(%level) | [%file:%line] - %msg%n"
