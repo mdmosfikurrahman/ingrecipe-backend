@@ -14,13 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -85,8 +84,13 @@ public class TokenServiceImpl implements TokenService {
         }
 
         Map<String, Object> claims = new HashMap<>();
-        Date issuedAt = new Date(System.currentTimeMillis());
-        Date expiration = new Date(System.currentTimeMillis() + 60 * 60 * 1000);
+
+        ZonedDateTime issuedAtZdt = Instant.now().atZone(ZoneId.of("Asia/Dhaka"));
+        ZonedDateTime expirationZdt = issuedAtZdt.plusHours(1);
+
+        Date issuedAt = Date.from(issuedAtZdt.toInstant());
+        Date expiration = Date.from(expirationZdt.toInstant());
+
         String token = Jwts.builder()
                 .claims()
                 .add(claims)
@@ -107,6 +111,7 @@ public class TokenServiceImpl implements TokenService {
         repository.save(revokedToken);
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd MMMM, yyyy hh:mm:ss a");
+        formatter.setTimeZone(TimeZone.getTimeZone("Asia/Dhaka"));
 
         return new JwtTokenResponse(token, formatter.format(issuedAt), formatter.format(expiration));
     }
