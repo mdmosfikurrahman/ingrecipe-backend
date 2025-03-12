@@ -1,7 +1,10 @@
 package org.epde.ingrecipe.auth.token.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.epde.ingrecipe.user.model.Users;
 
 import java.time.LocalDateTime;

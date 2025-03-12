@@ -3,19 +3,18 @@ package org.epde.ingrecipe.auth.token.service.impl;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.epde.ingrecipe.auth.dto.response.JwtTokenResponse;
+import org.epde.ingrecipe.auth.service.JwtService;
 import org.epde.ingrecipe.auth.token.model.RevokedToken;
 import org.epde.ingrecipe.auth.token.repository.RevokedTokenRepository;
-import org.epde.ingrecipe.auth.service.JwtService;
 import org.epde.ingrecipe.auth.token.service.TokenService;
 import org.epde.ingrecipe.user.model.Users;
+import org.epde.ingrecipe.util.DateTimeUtil;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -35,9 +34,10 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public boolean isTokenExpired(String token) {
-        RevokedToken RevokedToken = repository.findByToken(token);
-        if (RevokedToken != null) {
-            return RevokedToken.getExpiresAt().isBefore(LocalDateTime.now());
+        RevokedToken revokedToken = repository.findByToken(token);
+        if (revokedToken != null) {
+            LocalDateTime nowBDT = DateTimeUtil.convertToBDT(LocalDateTime.now());
+            return revokedToken.getExpiresAt().isBefore(nowBDT);
         }
         return true;
     }
@@ -55,7 +55,7 @@ public class TokenServiceImpl implements TokenService {
         List<RevokedToken> tokens = repository.findAll();
 
         tokens.stream()
-                .filter(RevokedToken -> isTokenExpired(RevokedToken.getToken()))
+                .filter(revokedToken -> isTokenExpired(revokedToken.getToken()))
                 .forEach(token -> {
                     token.setInvalidatedAt(token.getExpiresAt());
                     repository.save(token);
@@ -64,14 +64,11 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public String extractTokenExpiration(String token) {
-        RevokedToken RevokedToken = repository.findByToken(token);
-        LocalDateTime expirationTime = RevokedToken.getExpiresAt();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM, yyyy hh:mm:ss a");
-        return expirationTime.format(formatter);
-    }
-
-    private LocalDateTime convertToLocalDateTimeViaInstant(Date dateToConvert) {
-        return dateToConvert.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
+        RevokedToken revokedToken = repository.findByToken(token);
+        if (revokedToken != null) {
+            return DateTimeUtil.formatToBDT(revokedToken.getExpiresAt());
+        }
+        return "N/A";
     }
 
     @Override
@@ -80,12 +77,17 @@ public class TokenServiceImpl implements TokenService {
         RevokedToken existingToken = repository.findByUserAndInvalidatedAtIsNull(user);
 
         if (existingToken != null) {
-            repository.invalidateToken(existingToken.getToken(), user, LocalDateTime.now());
+            repository.invalidateToken(existingToken.getToken(), user, DateTimeUtil.nowBDT());
         }
 
         Map<String, Object> claims = new HashMap<>();
-        Date issuedAt = new Date(System.currentTimeMillis());
-        Date expiration = new Date(System.currentTimeMillis() + 60 * 60 * 1000);
+
+        LocalDateTime issuedAtBDT = DateTimeUtil.nowBDT();
+        LocalDateTime expirationBDT = issuedAtBDT.plusHours(1);
+
+        Date issuedAt = DateTimeUtil.convertToDate(issuedAtBDT);
+        Date expiration = DateTimeUtil.convertToDate(expirationBDT);
+
         String token = Jwts.builder()
                 .claims()
                 .add(claims)
@@ -100,14 +102,16 @@ public class TokenServiceImpl implements TokenService {
                 .token(token)
                 .user(user)
                 .invalidatedAt(null)
-                .expiresAt(convertToLocalDateTimeViaInstant(expiration))
+                .expiresAt(expirationBDT)
                 .build();
 
         repository.save(revokedToken);
 
-        SimpleDateFormat formatter = new SimpleDateFormat("dd MMMM, yyyy hh:mm:ss a");
-
-        return new JwtTokenResponse(token, formatter.format(issuedAt), formatter.format(expiration));
+        return new JwtTokenResponse(
+                token,
+                DateTimeUtil.formatToBDT(issuedAtBDT),
+                DateTimeUtil.formatToBDT(expirationBDT)
+        );
     }
 
 }
