@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,7 +38,7 @@ public class TokenServiceImpl implements TokenService {
     public boolean isTokenExpired(String token) {
         RevokedToken RevokedToken = repository.findByToken(token);
         if (RevokedToken != null) {
-            return RevokedToken.getExpiresAt().isBefore(LocalDateTime.now());
+            return RevokedToken.getExpiresAt().isBefore(LocalDateTime.now(ZoneId.of("Asia/Dhaka")));
         }
         return true;
     }
@@ -71,7 +72,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     private LocalDateTime convertToLocalDateTimeViaInstant(Date dateToConvert) {
-        return dateToConvert.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
+        return dateToConvert.toInstant().atZone(ZoneId.of("Asia/Dhaka")).toLocalDateTime();
     }
 
     @Override
@@ -80,7 +81,7 @@ public class TokenServiceImpl implements TokenService {
         RevokedToken existingToken = repository.findByUserAndInvalidatedAtIsNull(user);
 
         if (existingToken != null) {
-            repository.invalidateToken(existingToken.getToken(), user, LocalDateTime.now());
+            repository.invalidateToken(existingToken.getToken(), user, LocalDateTime.now(ZoneId.of("Asia/Dhaka")));
         }
 
         Map<String, Object> claims = new HashMap<>();

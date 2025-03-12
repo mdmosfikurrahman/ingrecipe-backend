@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             Users user = (Users) authentication.getPrincipal();
-            repository.invalidateToken(token, user, LocalDateTime.now());
+            repository.invalidateToken(token, user, LocalDateTime.now(ZoneId.of("Asia/Dhaka")));
             return "User logged out successfully.";
         }
         return "Invalid authorization header.";
