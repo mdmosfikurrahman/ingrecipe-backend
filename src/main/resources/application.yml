@@ -21,6 +21,9 @@ spring:
       pool:
         size: 10
 
+  jackson:
+    time-zone: Asia/Dhaka
+
 server:
   port: 8888
   servlet:
