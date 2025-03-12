@@ -8,7 +8,7 @@ import java.util.Date;
 public class DateTimeUtil {
 
     private static final ZoneId BD_ZONE_ID = ZoneId.of("Asia/Dhaka");
-    private static final DateTimeFormatter DEFAULT_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM, yyyy hh:mm:ss a");
+    public static final DateTimeFormatter DEFAULT_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM, yyyy hh:mm:ss a");
 
     /**
      * Convert Date to LocalDateTime in BD time zone.

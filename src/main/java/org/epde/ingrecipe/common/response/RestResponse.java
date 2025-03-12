@@ -7,6 +7,7 @@ import lombok.Data;
 import org.epde.ingrecipe.common.util.DateTimeUtil;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @Builder
@@ -36,5 +37,16 @@ public class RestResponse<T> {
                 .message(message)
                 .error(error)
                 .build();
+    }
+
+    public String toJson() {
+        DateTimeFormatter formatter = DateTimeUtil.DEFAULT_FORMATTER;
+        return "{" +
+                "\"timestamp\":\"" + (timestamp != null ? timestamp.format(formatter) : null) + "\"," +
+                "\"status\":" + status + "," +
+                "\"message\":\"" + message + "\"," +
+                "\"data\":" + (data != null ? "\"" + data + "\"" : "null") + "," +
+                "\"error\":" + (error != null ? "\"" + error + "\"" : "null") +
+                "}";
     }
 }
