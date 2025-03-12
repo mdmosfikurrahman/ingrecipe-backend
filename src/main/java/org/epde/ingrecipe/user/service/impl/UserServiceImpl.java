@@ -2,7 +2,7 @@ package org.epde.ingrecipe.user.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.epde.ingrecipe.auth.dto.response.JwtTokenResponse;
-import org.epde.ingrecipe.auth.service.TokenService;
+import org.epde.ingrecipe.auth.token.service.TokenService;
 import org.epde.ingrecipe.common.exception.BadRequestException;
 import org.epde.ingrecipe.common.exception.NotFoundException;
 import org.epde.ingrecipe.user.dto.request.PasswordUpdateRequest;

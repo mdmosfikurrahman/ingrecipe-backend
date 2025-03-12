@@ -1,7 +1,8 @@
-package org.epde.ingrecipe.common.config;
+package org.epde.ingrecipe.common.security;
 
 import lombok.RequiredArgsConstructor;
 import org.epde.ingrecipe.auth.filter.JwtFilter;
+import org.epde.ingrecipe.auth.role.model.Role;
 import org.epde.ingrecipe.user.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +43,6 @@ public class SecurityConfig {
 //            - Add personal recipes
 //            - Save favorite recipes
 //            - Comment on recipes
-
     );
 
 
@@ -62,18 +62,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         var roleEndpointsMap = Map.ofEntries(
-                Map.entry("PUBLIC", PUBLIC_API_ENDPOINTS),
-                Map.entry("ADMIN", ADMIN_API_ENDPOINTS),
-                Map.entry("MODERATOR", MODERATOR_API_ENDPOINTS),
-                Map.entry("USER", USER_API_ENDPOINTS)
+                Map.entry(Role.ADMIN.name(), ADMIN_API_ENDPOINTS),
+                Map.entry(Role.MODERATOR.name(), MODERATOR_API_ENDPOINTS),
+                Map.entry(Role.USER.name(), USER_API_ENDPOINTS)
         );
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers(PUBLIC_API_ENDPOINTS.toArray(String[]::new)).permitAll();
+
                     roleEndpointsMap.forEach((role, endpoints) ->
                             request.requestMatchers(endpoints.toArray(String[]::new)).hasRole(role)
                     );
+
                     request.anyRequest().authenticated();
                 })
                 .httpBasic(Customizer.withDefaults())

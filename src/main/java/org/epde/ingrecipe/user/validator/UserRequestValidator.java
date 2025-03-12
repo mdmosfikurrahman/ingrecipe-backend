@@ -2,7 +2,7 @@ package org.epde.ingrecipe.user.validator;
 
 import org.epde.ingrecipe.common.exception.ValidationException;
 import org.epde.ingrecipe.user.dto.request.UserRequest;
-import org.epde.ingrecipe.user.model.Role;
+import org.epde.ingrecipe.auth.role.model.Role;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 

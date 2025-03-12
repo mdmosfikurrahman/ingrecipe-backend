@@ -1,12 +1,12 @@
-package org.epde.ingrecipe.auth.service.impl;
+package org.epde.ingrecipe.auth.token.service.impl;
 
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.epde.ingrecipe.auth.dto.response.JwtTokenResponse;
-import org.epde.ingrecipe.auth.model.TokenBlackList;
-import org.epde.ingrecipe.auth.repository.TokenBlackListRepository;
+import org.epde.ingrecipe.auth.token.model.RevokedToken;
+import org.epde.ingrecipe.auth.token.repository.RevokedTokenRepository;
 import org.epde.ingrecipe.auth.service.JwtService;
-import org.epde.ingrecipe.auth.service.TokenService;
+import org.epde.ingrecipe.auth.token.service.TokenService;
 import org.epde.ingrecipe.user.model.Users;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,18 +26,18 @@ import java.util.Map;
 public class TokenServiceImpl implements TokenService {
 
     private final JwtService jwtService;
-    private final TokenBlackListRepository repository;
+    private final RevokedTokenRepository repository;
 
     @Override
-    public boolean isTokenBlacklisted(String token) {
+    public boolean isTokenRevoked(String token) {
         return repository.existsByTokenAndInvalidatedAtIsNotNull(token);
     }
 
     @Override
     public boolean isTokenExpired(String token) {
-        TokenBlackList tokenBlackList = repository.findByToken(token);
-        if (tokenBlackList != null) {
-            return tokenBlackList.getExpiresAt().isBefore(LocalDateTime.now());
+        RevokedToken RevokedToken = repository.findByToken(token);
+        if (RevokedToken != null) {
+            return RevokedToken.getExpiresAt().isBefore(LocalDateTime.now());
         }
         return true;
     }
@@ -52,10 +52,10 @@ public class TokenServiceImpl implements TokenService {
     @Transactional
     @Override
     public void cleanUpExpiredTokens() {
-        List<TokenBlackList> tokens = repository.findAll();
+        List<RevokedToken> tokens = repository.findAll();
 
         tokens.stream()
-                .filter(tokenBlackList -> isTokenExpired(tokenBlackList.getToken()))
+                .filter(RevokedToken -> isTokenExpired(RevokedToken.getToken()))
                 .forEach(token -> {
                     token.setInvalidatedAt(token.getExpiresAt());
                     repository.save(token);
@@ -64,8 +64,8 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public String extractTokenExpiration(String token) {
-        TokenBlackList tokenBlackList = repository.findByToken(token);
-        LocalDateTime expirationTime = tokenBlackList.getExpiresAt();
+        RevokedToken RevokedToken = repository.findByToken(token);
+        LocalDateTime expirationTime = RevokedToken.getExpiresAt();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM, yyyy hh:mm:ss a");
         return expirationTime.format(formatter);
     }
@@ -77,7 +77,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     @Transactional
     public JwtTokenResponse generateToken(String username, Users user) {
-        TokenBlackList existingToken = repository.findByUserAndInvalidatedAtIsNull(user);
+        RevokedToken existingToken = repository.findByUserAndInvalidatedAtIsNull(user);
 
         if (existingToken != null) {
             repository.invalidateToken(existingToken.getToken(), user, LocalDateTime.now());
@@ -96,14 +96,14 @@ public class TokenServiceImpl implements TokenService {
                 .signWith(jwtService.getKey())
                 .compact();
 
-        TokenBlackList tokenBlacklist = TokenBlackList.builder()
+        RevokedToken revokedToken = RevokedToken.builder()
                 .token(token)
                 .user(user)
                 .invalidatedAt(null)
                 .expiresAt(convertToLocalDateTimeViaInstant(expiration))
                 .build();
 
-        repository.save(tokenBlacklist);
+        repository.save(revokedToken);
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd MMMM, yyyy hh:mm:ss a");
 

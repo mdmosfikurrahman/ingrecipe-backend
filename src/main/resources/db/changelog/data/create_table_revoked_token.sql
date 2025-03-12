@@ -1,4 +1,4 @@
-CREATE TABLE token_blacklist
+CREATE TABLE revoked_token
 (
     id             BIGSERIAL PRIMARY KEY,
     token          TEXT      NOT NULL UNIQUE,

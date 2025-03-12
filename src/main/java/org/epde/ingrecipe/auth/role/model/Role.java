@@ -1,4 +1,4 @@
-package org.epde.ingrecipe.user.model;
+package org.epde.ingrecipe.auth.role.model;
 
 import lombok.Getter;
 

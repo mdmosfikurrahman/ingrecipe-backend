@@ -1,4 +1,4 @@
-package org.epde.ingrecipe.auth.service;
+package org.epde.ingrecipe.auth.token.service;
 
 import org.epde.ingrecipe.auth.dto.response.JwtTokenResponse;
 import org.epde.ingrecipe.user.model.Users;
@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 @SuppressWarnings("unused")
 public interface TokenService {
-    boolean isTokenBlacklisted(String token);
+    boolean isTokenRevoked(String token);
     boolean isTokenExpired(String token);
     boolean validateToken(String token, UserDetails userDetails);
     void cleanUpExpiredTokens();

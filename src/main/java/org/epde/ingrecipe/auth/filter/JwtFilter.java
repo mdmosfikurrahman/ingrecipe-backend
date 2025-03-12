@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.epde.ingrecipe.auth.service.JwtService;
-import org.epde.ingrecipe.auth.service.TokenService;
+import org.epde.ingrecipe.auth.token.service.TokenService;
 import org.epde.ingrecipe.common.response.RestResponse;
 import org.epde.ingrecipe.user.service.UserService;
 import org.springframework.context.ApplicationContext;
@@ -41,7 +41,7 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 email = jwtService.extractEmail(token);
 
-                if (tokenService.isTokenBlacklisted(token)) {
+                if (tokenService.isTokenRevoked(token)) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     writeResponse(response, RestResponse.error(HttpServletResponse.SC_UNAUTHORIZED, "Please log in again.", "Token is blacklisted."));
                     return;

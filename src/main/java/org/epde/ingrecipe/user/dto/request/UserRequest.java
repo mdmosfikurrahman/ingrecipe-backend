@@ -1,7 +1,7 @@
 package org.epde.ingrecipe.user.dto.request;
 
 import lombok.Data;
-import org.epde.ingrecipe.user.model.Role;
+import org.epde.ingrecipe.auth.role.model.Role;
 
 @Data
 public class UserRequest {
