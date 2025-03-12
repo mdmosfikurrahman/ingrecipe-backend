@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Data
@@ -22,7 +23,7 @@ public class RestResponse<T> {
 
     public static <T> RestResponse<T> success(int status, String message, T data) {
         return RestResponse.<T>builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now(ZoneId.of("Asia/Dhaka")))
                 .status(status)
                 .message(message)
                 .data(data)
@@ -31,7 +32,7 @@ public class RestResponse<T> {
 
     public static <T> RestResponse<T> error(int status, String message, T error) {
         return RestResponse.<T>builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now(ZoneId.of("Asia/Dhaka")))
                 .status(status)
                 .message(message)
                 .error(error)
