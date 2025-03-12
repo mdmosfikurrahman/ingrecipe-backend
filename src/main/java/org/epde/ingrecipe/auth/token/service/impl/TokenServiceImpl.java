@@ -7,18 +7,13 @@ import org.epde.ingrecipe.auth.token.model.RevokedToken;
 import org.epde.ingrecipe.auth.token.repository.RevokedTokenRepository;
 import org.epde.ingrecipe.auth.service.JwtService;
 import org.epde.ingrecipe.auth.token.service.TokenService;
+import org.epde.ingrecipe.common.util.DateTimeUtil;
 import org.epde.ingrecipe.user.model.Users;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -35,11 +30,8 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public boolean isTokenExpired(String token) {
-        RevokedToken RevokedToken = repository.findByToken(token);
-        if (RevokedToken != null) {
-            return RevokedToken.getExpiresAt().isBefore(LocalDateTime.now(ZoneId.of("Asia/Dhaka")));
-        }
-        return true;
+        RevokedToken revokedToken = repository.findByToken(token);
+        return revokedToken == null || revokedToken.getExpiresAt().isBefore(DateTimeUtil.now());
     }
 
     @Override
@@ -53,9 +45,8 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void cleanUpExpiredTokens() {
         List<RevokedToken> tokens = repository.findAll();
-
         tokens.stream()
-                .filter(RevokedToken -> isTokenExpired(RevokedToken.getToken()))
+                .filter(token -> isTokenExpired(token.getToken()))
                 .forEach(token -> {
                     token.setInvalidatedAt(token.getExpiresAt());
                     repository.save(token);
@@ -64,14 +55,8 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public String extractTokenExpiration(String token) {
-        RevokedToken RevokedToken = repository.findByToken(token);
-        LocalDateTime expirationTime = RevokedToken.getExpiresAt();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM, yyyy hh:mm:ss a");
-        return expirationTime.format(formatter);
-    }
-
-    private LocalDateTime convertToLocalDateTimeViaInstant(Date dateToConvert) {
-        return dateToConvert.toInstant().atZone(ZoneId.of("Asia/Dhaka")).toLocalDateTime();
+        RevokedToken revokedToken = repository.findByToken(token);
+        return revokedToken != null ? DateTimeUtil.format(revokedToken.getExpiresAt()) : "Expired/Invalid Token";
     }
 
     @Override
@@ -80,16 +65,12 @@ public class TokenServiceImpl implements TokenService {
         RevokedToken existingToken = repository.findByUserAndInvalidatedAtIsNull(user);
 
         if (existingToken != null) {
-            repository.invalidateToken(existingToken.getToken(), user, LocalDateTime.now(ZoneId.of("Asia/Dhaka")));
+            repository.invalidateToken(existingToken.getToken(), user, DateTimeUtil.now());
         }
 
         Map<String, Object> claims = new HashMap<>();
-
-        ZonedDateTime issuedAtZdt = Instant.now().atZone(ZoneId.of("Asia/Dhaka"));
-        ZonedDateTime expirationZdt = issuedAtZdt.plusHours(1);
-
-        Date issuedAt = Date.from(issuedAtZdt.toInstant());
-        Date expiration = Date.from(expirationZdt.toInstant());
+        Date issuedAt = DateTimeUtil.toDate(DateTimeUtil.now());
+        Date expiration = DateTimeUtil.toDate(DateTimeUtil.now().plusHours(1));
 
         String token = Jwts.builder()
                 .claims()
@@ -105,15 +86,11 @@ public class TokenServiceImpl implements TokenService {
                 .token(token)
                 .user(user)
                 .invalidatedAt(null)
-                .expiresAt(convertToLocalDateTimeViaInstant(expiration))
+                .expiresAt(DateTimeUtil.toLocalDateTime(expiration))
                 .build();
 
         repository.save(revokedToken);
 
-        SimpleDateFormat formatter = new SimpleDateFormat("dd MMMM, yyyy hh:mm:ss a");
-        formatter.setTimeZone(TimeZone.getTimeZone("Asia/Dhaka"));
-
-        return new JwtTokenResponse(token, formatter.format(issuedAt), formatter.format(expiration));
+        return new JwtTokenResponse(token, DateTimeUtil.format(issuedAt), DateTimeUtil.format(expiration));
     }
-
 }
