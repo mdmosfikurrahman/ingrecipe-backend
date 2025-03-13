@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.epde.ingrecipe.auth.role.model.Role;
 
 @Data
 @Builder
@@ -13,6 +12,6 @@ import org.epde.ingrecipe.auth.role.model.Role;
 public class UserResponse {
 
     private String username;
-    private Role role;
+    private String role;
 
 }

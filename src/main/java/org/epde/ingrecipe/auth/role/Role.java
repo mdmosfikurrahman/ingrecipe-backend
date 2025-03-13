@@ -1,4 +1,4 @@
-package org.epde.ingrecipe.auth.role.model;
+package org.epde.ingrecipe.auth.role;
 
 import lombok.Getter;
 
@@ -9,9 +9,9 @@ import java.util.Collections;
 
 @Getter
 public enum Role {
-    ADMIN(1),
+    USER(1),
     MODERATOR(2),
-    USER(3);
+    ADMIN(3);
 
     private final long value;
 

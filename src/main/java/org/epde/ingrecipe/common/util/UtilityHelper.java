@@ -5,7 +5,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
-public class DateTimeUtil {
+public class UtilityHelper {
 
     private static final ZoneId BD_ZONE_ID = ZoneId.of("Asia/Dhaka");
     public static final DateTimeFormatter DEFAULT_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM, yyyy hh:mm:ss a");
@@ -43,5 +43,15 @@ public class DateTimeUtil {
      */
     public static String format(Date date) {
         return format(toLocalDateTime(date));
+    }
+
+    /**
+     * Capitalize the first letter of a string and convert the rest to lowercase.
+     */
+    public static String capitalize(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        return text.substring(0, 1).toUpperCase() + text.substring(1).toLowerCase();
     }
 }

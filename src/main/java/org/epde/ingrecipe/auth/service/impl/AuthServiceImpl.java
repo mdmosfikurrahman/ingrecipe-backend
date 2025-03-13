@@ -7,7 +7,7 @@ import org.epde.ingrecipe.auth.token.repository.RevokedTokenRepository;
 import org.epde.ingrecipe.auth.service.AuthService;
 import org.epde.ingrecipe.auth.token.service.TokenService;
 import org.epde.ingrecipe.auth.validator.LoginRequestValidator;
-import org.epde.ingrecipe.common.util.DateTimeUtil;
+import org.epde.ingrecipe.common.util.UtilityHelper;
 import org.epde.ingrecipe.user.model.Users;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -46,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             Users user = (Users) authentication.getPrincipal();
-            repository.invalidateToken(token, user, DateTimeUtil.now());
+            repository.invalidateToken(token, user, UtilityHelper.now());
             return "User logged out successfully.";
         }
         return "Invalid authorization header.";

@@ -4,10 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
-import org.epde.ingrecipe.common.util.DateTimeUtil;
+import org.epde.ingrecipe.common.util.UtilityHelper;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Data
 @Builder
@@ -23,7 +22,7 @@ public class RestResponse<T> {
 
     public static <T> RestResponse<T> success(int status, String message, T data) {
         return RestResponse.<T>builder()
-                .timestamp(DateTimeUtil.now())
+                .timestamp(UtilityHelper.now())
                 .status(status)
                 .message(message)
                 .data(data)
@@ -32,7 +31,7 @@ public class RestResponse<T> {
 
     public static <T> RestResponse<T> error(int status, String message, T error) {
         return RestResponse.<T>builder()
-                .timestamp(DateTimeUtil.now())
+                .timestamp(UtilityHelper.now())
                 .status(status)
                 .message(message)
                 .error(error)
@@ -40,9 +39,8 @@ public class RestResponse<T> {
     }
 
     public String toJson() {
-        DateTimeFormatter formatter = DateTimeUtil.DEFAULT_FORMATTER;
         return "{" +
-                "\"timestamp\":\"" + (timestamp != null ? timestamp.format(formatter) : null) + "\"," +
+                "\"timestamp\":\"" + (timestamp != null ? timestamp.format(UtilityHelper.DEFAULT_FORMATTER) : null) + "\"," +
                 "\"status\":" + status + "," +
                 "\"message\":\"" + message + "\"," +
                 "\"data\":" + (data != null ? "\"" + data + "\"" : "null") + "," +

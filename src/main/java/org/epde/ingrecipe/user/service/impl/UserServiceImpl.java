@@ -5,6 +5,8 @@ import org.epde.ingrecipe.auth.dto.response.JwtTokenResponse;
 import org.epde.ingrecipe.auth.token.service.TokenService;
 import org.epde.ingrecipe.common.exception.BadRequestException;
 import org.epde.ingrecipe.common.exception.NotFoundException;
+import org.epde.ingrecipe.common.exception.UnauthorizedException;
+import org.epde.ingrecipe.common.util.UtilityHelper;
 import org.epde.ingrecipe.user.dto.request.PasswordUpdateRequest;
 import org.epde.ingrecipe.user.dto.request.UserRequest;
 import org.epde.ingrecipe.user.dto.response.UserResponse;
@@ -12,10 +14,14 @@ import org.epde.ingrecipe.user.model.Users;
 import org.epde.ingrecipe.user.repository.UserRepository;
 import org.epde.ingrecipe.user.service.UserService;
 import org.epde.ingrecipe.user.validator.UserRequestValidator;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +32,24 @@ public class UserServiceImpl implements UserService {
     private final UserRequestValidator validator;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
-    private static final String USER_NOT_FOUND_MESSAGE = "User with ID %s not found.";
+    private static final String USER_NOT_FOUND_MESSAGE_WITH_ID = "User with ID %s not found.";
+    private static final String USER_NOT_FOUND_MESSAGE_WITH_EMAIL = "User with ID %s not found.";
 
     @Override
-    public UserResponse getUser(Long id) {
+    public UserResponse getSelfProfile(String authHeader, Authentication authentication) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            if (authentication != null && authentication.getPrincipal() instanceof Users user) {
+                return getUserProfile(user.getId());
+            }
+        }
+        throw new UnauthorizedException("Invalid authentication or missing Bearer token");
+    }
+
+    @Override
+    public UserResponse getUserProfile(Long id) {
         return repository.findById(id)
                 .map(this::createUserResponse)
-                .orElseThrow(() -> new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE, id)));
+                .orElseThrow(() -> new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE_WITH_ID, id)));
     }
 
     @Override
@@ -52,6 +69,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<UserResponse> registerUsers(List<UserRequest> requests) {
+        return requests.stream()
+                .map(this::registerUser)
+                .toList();
+    }
+
+    @Override
     public UserResponse updateUser(Long id, UserRequest request) {
         validator.validate(request);
         Users existingUser = getUserById(id);
@@ -62,11 +86,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public JwtTokenResponse updatePassword(Long id, PasswordUpdateRequest request) {
-        Users existingUser = getUserById(id);
-        existingUser.setPassword(encodePassword(request.getNewPassword()));
-        repository.save(existingUser);
-        return tokenService.generateToken(existingUser.getUsername(), existingUser);
+    public JwtTokenResponse updatePassword(String authHeader, Authentication authentication, PasswordUpdateRequest request) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            if (authentication != null && authentication.getPrincipal() instanceof Users user) {
+                Users existingUser = repository.findByEmail(user.getEmail())
+                        .orElseThrow(() -> new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE_WITH_EMAIL, user.getEmail())));
+                if (Objects.equals(existingUser.getEmail(), request.getEmail())) {
+                    existingUser.setPassword(encodePassword(request.getNewPassword()));
+                    repository.save(existingUser);
+                    return tokenService.generateToken(existingUser.getEmail(), existingUser);
+                } else {
+                    throw new UnauthorizedException("Email Address does not match!");
+                }
+            }
+        }
+        throw new UnauthorizedException("Invalid authentication!");
     }
 
     @Override
@@ -74,13 +108,8 @@ public class UserServiceImpl implements UserService {
         repository.findById(id)
                 .ifPresentOrElse(
                         user -> repository.deleteById(id),
-                        () -> { throw new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE, id)); }
+                        () -> { throw new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE_WITH_ID, id)); }
                 );
-    }
-
-    @Override
-    public boolean userExists(Long id) {
-        return repository.existsById(id);
     }
 
     private void checkIfUserExists(UserRequest request) {
@@ -96,13 +125,13 @@ public class UserServiceImpl implements UserService {
 
     private Users getUserById(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE, id)));
+                .orElseThrow(() -> new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE_WITH_ID, id)));
     }
 
     private UserResponse createUserResponse(Users user) {
         return UserResponse.builder()
                 .username(user.getUsername())
-                .role(user.getRole())
+                .role(UtilityHelper.capitalize(user.getRole().name()))
                 .build();
     }
 

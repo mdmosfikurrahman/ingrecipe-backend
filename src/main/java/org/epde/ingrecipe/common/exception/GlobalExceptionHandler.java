@@ -59,4 +59,10 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", List.of(errorResponse));
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<RestResponse<List<ErrorDetails>>> handleUnauthorizedException(UnauthorizedException ex) {
+        ErrorDetails errorResponse = new ErrorDetails("Unauthorized", ex.getMessage());
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", List.of(errorResponse));
+    }
+
 }

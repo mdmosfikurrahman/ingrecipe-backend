@@ -2,7 +2,9 @@ package org.epde.ingrecipe.common.security;
 
 import lombok.RequiredArgsConstructor;
 import org.epde.ingrecipe.auth.filter.JwtFilter;
-import org.epde.ingrecipe.auth.role.model.Role;
+import org.epde.ingrecipe.auth.role.Role;
+import org.epde.ingrecipe.common.response.RestResponse;
+import org.epde.ingrecipe.common.security.authorization.RoleEndpointProvider;
 import org.epde.ingrecipe.user.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +20,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -29,57 +36,35 @@ public class SecurityConfig {
 
     private final UserService userService;
     private final JwtFilter jwtFilter;
-
-    private static final List<String> PUBLIC_API_ENDPOINTS = List.of(
-            "/auth/login/**",
-            "/non-secure/**",
-            "/users/register/**"
-//            - View recipes
-//            - Search for recipes by ingredients
-    );
-
-    private static final List<String> USER_API_ENDPOINTS = List.of(
-//            - All guest permissions
-//            - Add personal recipes
-//            - Save favorite recipes
-//            - Comment on recipes
-    );
-
-
-    private static final List<String> MODERATOR_API_ENDPOINTS = List.of(
-//            - Approve/reject user-submitted recipes
-//            - Moderate comments
-//            - Edit recipes for formatting/errors
-    );
-
-    private static final List<String> ADMIN_API_ENDPOINTS = List.of(
-//            - All moderator permissions
-//            - Manage users
-//            - Delete/edit any recipe
-//            - Manage system settings
-    );
+    private final RoleEndpointProvider roleEndpointProvider;
+    private static final int BCRYPT_STRENGTH = 12;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        var roleEndpointsMap = Map.ofEntries(
-                Map.entry(Role.ADMIN.name(), ADMIN_API_ENDPOINTS),
-                Map.entry(Role.MODERATOR.name(), MODERATOR_API_ENDPOINTS),
-                Map.entry(Role.USER.name(), USER_API_ENDPOINTS)
-        );
+        List<String> publicEndpoints = roleEndpointProvider.getPublicEndpoints();
+        List<String> commonSecureEndpoints = roleEndpointProvider.getCommonSecureEndpoints();
+        Map<String, List<String>> roleEndpoints = roleEndpointProvider.getRoleEndpoints();
 
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(request -> {
-                    request.requestMatchers(PUBLIC_API_ENDPOINTS.toArray(String[]::new)).permitAll();
+                .authorizeHttpRequests(requests -> {
+                    requests.requestMatchers(publicEndpoints.toArray(String[]::new)).permitAll();
+                    requests.requestMatchers(commonSecureEndpoints.toArray(String[]::new))
+                            .hasAnyRole(Role.USER.name(), Role.MODERATOR.name(), Role.ADMIN.name());
 
-                    roleEndpointsMap.forEach((role, endpoints) ->
-                            request.requestMatchers(endpoints.toArray(String[]::new)).hasRole(role)
+                    roleEndpoints.forEach((role, endpoints) ->
+                            requests.requestMatchers(endpoints.toArray(String[]::new)).hasRole(role)
                     );
 
-                    request.anyRequest().authenticated();
+                    requests.anyRequest().authenticated();
                 })
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptionHandling ->
+                        exceptionHandling
+                                .authenticationEntryPoint(unauthorizedHandler())
+                                .accessDeniedHandler(forbiddenHandler())
+                );
 
         return http.build();
     }
@@ -87,13 +72,39 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(new BCryptPasswordEncoder(12));
+        provider.setPasswordEncoder(new BCryptPasswordEncoder(BCRYPT_STRENGTH));
         provider.setUserDetailsService(userService);
         return provider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public AuthenticationEntryPoint unauthorizedHandler() {
+        return (request, response, authException) -> {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            writeResponse(response, RestResponse.error(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized", "Invalid or missing token."));
+        };
+    }
+
+    @Bean
+    public AccessDeniedHandler forbiddenHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            writeResponse(response, RestResponse.error(HttpServletResponse.SC_FORBIDDEN, "Forbidden", "You do not have permission to access this resource."));
+        };
+    }
+
+    private void writeResponse(HttpServletResponse response, RestResponse<?> restResponse) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        String jsonResponse = restResponse.toJson();
+        try (PrintWriter writer = response.getWriter()) {
+            writer.write(jsonResponse);
+            writer.flush();
+        }
     }
 }

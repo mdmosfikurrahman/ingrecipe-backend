@@ -7,7 +7,7 @@ import org.epde.ingrecipe.auth.token.model.RevokedToken;
 import org.epde.ingrecipe.auth.token.repository.RevokedTokenRepository;
 import org.epde.ingrecipe.auth.service.JwtService;
 import org.epde.ingrecipe.auth.token.service.TokenService;
-import org.epde.ingrecipe.common.util.DateTimeUtil;
+import org.epde.ingrecipe.common.util.UtilityHelper;
 import org.epde.ingrecipe.user.model.Users;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,7 +31,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public boolean isTokenExpired(String token) {
         RevokedToken revokedToken = repository.findByToken(token);
-        return revokedToken == null || revokedToken.getExpiresAt().isBefore(DateTimeUtil.now());
+        return revokedToken == null || revokedToken.getExpiresAt().isBefore(UtilityHelper.now());
     }
 
     @Override
@@ -56,7 +56,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public String extractTokenExpiration(String token) {
         RevokedToken revokedToken = repository.findByToken(token);
-        return revokedToken != null ? DateTimeUtil.format(revokedToken.getExpiresAt()) : "Expired/Invalid Token";
+        return revokedToken != null ? UtilityHelper.format(revokedToken.getExpiresAt()) : "Expired/Invalid Token";
     }
 
     @Override
@@ -65,12 +65,12 @@ public class TokenServiceImpl implements TokenService {
         RevokedToken existingToken = repository.findByUserAndInvalidatedAtIsNull(user);
 
         if (existingToken != null) {
-            repository.invalidateToken(existingToken.getToken(), user, DateTimeUtil.now());
+            repository.invalidateToken(existingToken.getToken(), user, UtilityHelper.now());
         }
 
         Map<String, Object> claims = new HashMap<>();
-        Date issuedAt = DateTimeUtil.toDate(DateTimeUtil.now());
-        Date expiration = DateTimeUtil.toDate(DateTimeUtil.now().plusHours(1));
+        Date issuedAt = UtilityHelper.toDate(UtilityHelper.now());
+        Date expiration = UtilityHelper.toDate(UtilityHelper.now().plusHours(1));
 
         String token = Jwts.builder()
                 .claims()
@@ -86,11 +86,11 @@ public class TokenServiceImpl implements TokenService {
                 .token(token)
                 .user(user)
                 .invalidatedAt(null)
-                .expiresAt(DateTimeUtil.toLocalDateTime(expiration))
+                .expiresAt(UtilityHelper.toLocalDateTime(expiration))
                 .build();
 
         repository.save(revokedToken);
 
-        return new JwtTokenResponse(token, DateTimeUtil.format(issuedAt), DateTimeUtil.format(expiration));
+        return new JwtTokenResponse(token, UtilityHelper.format(issuedAt), UtilityHelper.format(expiration));
     }
 }

@@ -40,8 +40,18 @@ public class RecipeController {
         return RestResponse.success(HttpStatus.OK.value(), "Success", "Recipe moderation action: " + action);
     }
 
-    @DeleteMapping("/{recipeId}")
+    @PutMapping("/moderate/edit/{recipeId}")
+    public RestResponse<String> editRecipe(@PathVariable String recipeId) {
+        return RestResponse.success(HttpStatus.OK.value(), "Success", "Recipe with ID " + recipeId + " edited for formatting/errors");
+    }
+
+    @DeleteMapping("/manage/{recipeId}")
     public RestResponse<String> adminDeleteRecipe(@PathVariable String recipeId) {
         return RestResponse.success(HttpStatus.OK.value(), "Success", "Recipe with ID " + recipeId + " deleted");
+    }
+
+    @DeleteMapping("/moderate/comment/{commentId}")
+    public RestResponse<String> moderateComment(@PathVariable String commentId) {
+        return RestResponse.success(HttpStatus.OK.value(), "Success", "Comment with ID " + commentId + " has been moderated");
     }
 }

@@ -1,4 +1,4 @@
-package org.epde.ingrecipe.auth.role.model;
+package org.epde.ingrecipe.auth.role;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
