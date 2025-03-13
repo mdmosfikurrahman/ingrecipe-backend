@@ -14,3 +14,35 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: db/changelog/data/create_table_revoked_token.sql
+
+  - changeSet:
+      id: create_table_recipe
+      author: mosfik
+      comment: "This changeset creates Recipe Table"
+      changes:
+        - sqlFile:
+            path: db/changelog/data/create_table_recipe.sql
+
+  - changeSet:
+      id: create_table_recipe_ingredients
+      author: mosfik
+      comment: "This changeset creates Recipe Ingredients"
+      changes:
+        - sqlFile:
+            path: db/changelog/data/create_table_recipe_ingredients.sql
+
+  - changeSet:
+      id: create_table_comment
+      author: mosfik
+      comment: "This changeset creates Comment Table"
+      changes:
+        - sqlFile:
+            path: db/changelog/data/create_table_comment.sql
+
+  - changeSet:
+      id: create_table_rating
+      author: mosfik
+      comment: "This changeset creates Rating Table"
+      changes:
+        - sqlFile:
+            path: db/changelog/data/create_table_rating.sql

@@ -19,7 +19,7 @@ public class RevokedToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "token_seq")
-    @SequenceGenerator(name = "token_seq", sequenceName = "token_id_seq", allocationSize = 1)
+    @SequenceGenerator(name = "token_seq", sequenceName = "revoked_token_id_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, unique = true, columnDefinition = "TEXT")

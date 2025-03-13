@@ -24,7 +24,8 @@ public class DefaultRoleEndpointProvider implements RoleEndpointProvider {
     public List<String> getCommonSecureEndpoints() {
         return List.of(
                 "/users/update-password",
-                "/users/self-profile"
+                "/users/self-profile",
+                "/recipes/unapproved"
         );
     }
 
@@ -33,7 +34,7 @@ public class DefaultRoleEndpointProvider implements RoleEndpointProvider {
         return Map.of(
                 Role.USER.name(), List.of(
                         "/recipes/add",
-                        "/recipes/favorite",
+                        "/recipes/rate/**",
                         "/recipes/comment"
                 ),
                 Role.MODERATOR.name(), List.of(
