@@ -17,5 +17,7 @@ public class Comment {
 
     private Long recipeId;
 
+    private Long userId;
+
     private String content;
 }

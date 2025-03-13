@@ -20,6 +20,12 @@ public class UserController {
 
     private final UserService service;
 
+    @GetMapping("/manage/get-all-users")
+    public RestResponse<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = service.getAllUsers();
+        return RestResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(), users);
+    }
+
     @PostMapping("/self-profile")
     public RestResponse<UserResponse> getSelfProfile(@RequestHeader("Authorization") String authHeader, Authentication authentication) {
         UserResponse response = service.getSelfProfile(authHeader, authentication);
@@ -36,12 +42,6 @@ public class UserController {
     public RestResponse<UserResponse> registerUser(@RequestBody UserRequest request) {
         UserResponse response = service.registerUser(request);
         return RestResponse.success(HttpStatus.CREATED.value(), "User registered successfully", response);
-    }
-
-    @PostMapping("/batch-register")
-    public RestResponse<List<UserResponse>> registerUsers(@RequestBody List<UserRequest> requests) {
-        List<UserResponse> responses = service.registerUsers(requests);
-        return RestResponse.success(HttpStatus.CREATED.value(), "Users registered successfully", responses);
     }
 
     @PutMapping("/manage/{id}")

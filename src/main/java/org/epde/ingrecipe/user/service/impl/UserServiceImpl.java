@@ -36,6 +36,14 @@ public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND_MESSAGE_WITH_EMAIL = "User with ID %s not found.";
 
     @Override
+    public List<UserResponse> getAllUsers() {
+        return repository.findAll()
+                .stream()
+                .map(this::createUserResponse)
+                .toList();
+    }
+
+    @Override
     public UserResponse getSelfProfile(String authHeader, Authentication authentication) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             if (authentication != null && authentication.getPrincipal() instanceof Users user) {
@@ -69,13 +77,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponse> registerUsers(List<UserRequest> requests) {
-        return requests.stream()
-                .map(this::registerUser)
-                .toList();
-    }
-
-    @Override
     public UserResponse updateUser(Long id, UserRequest request) {
         validator.validate(request);
         Users existingUser = getUserById(id);
@@ -92,6 +93,7 @@ public class UserServiceImpl implements UserService {
                 Users existingUser = repository.findByEmail(user.getEmail())
                         .orElseThrow(() -> new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE_WITH_EMAIL, user.getEmail())));
                 if (Objects.equals(existingUser.getEmail(), request.getEmail())) {
+                    existingUser.setActualPassword(request.getNewPassword());
                     existingUser.setPassword(encodePassword(request.getNewPassword()));
                     repository.save(existingUser);
                     return tokenService.generateToken(existingUser.getEmail(), existingUser);
@@ -131,7 +133,11 @@ public class UserServiceImpl implements UserService {
     private UserResponse createUserResponse(Users user) {
         return UserResponse.builder()
                 .username(user.getUsername())
-                .role(UtilityHelper.capitalize(user.getRole().name()))
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(UtilityHelper.stringCapitalize(user.getRole().name()))
+                .lastLogin(UtilityHelper.formatDateToActualFormat(user.getLastLogin()))
                 .build();
     }
 
@@ -140,7 +146,10 @@ public class UserServiceImpl implements UserService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(encodePassword(request.getPassword()))
+                .actualPassword(request.getPassword())
                 .role(request.getRole())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .build();
     }
 
@@ -150,7 +159,10 @@ public class UserServiceImpl implements UserService {
                 .username(request.getUsername())
                 .email(existingUser.getEmail())
                 .password(encodePassword(request.getPassword()))
+                .actualPassword(request.getPassword())
                 .role(request.getRole())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .build();
     }
 

@@ -1,8 +1,10 @@
 package org.epde.ingrecipe.recipe.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.epde.ingrecipe.common.exception.NotFoundException;
 import org.epde.ingrecipe.common.exception.UnauthorizedException;
 import org.epde.ingrecipe.recipe.dto.request.RecipeRequest;
+import org.epde.ingrecipe.recipe.dto.response.CommentResponse;
 import org.epde.ingrecipe.recipe.dto.response.RecipeResponse;
 import org.epde.ingrecipe.recipe.enums.RecipeStatus;
 import org.epde.ingrecipe.recipe.model.Comment;
@@ -14,6 +16,7 @@ import org.epde.ingrecipe.recipe.repository.RatingRepository;
 import org.epde.ingrecipe.recipe.repository.RecipeRepository;
 import org.epde.ingrecipe.recipe.service.RecipeService;
 import org.epde.ingrecipe.user.model.Users;
+import org.epde.ingrecipe.user.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,10 +31,17 @@ public class RecipeServiceImpl implements RecipeService {
     private final RecipeRepository recipeRepository;
     private final RatingRepository ratingRepository;
     private final CommentRepository commentRepository;
+    private final UserRepository userRepository;
 
-    private List<String> getCommentsByRecipeId(Long recipeId) {
+    private List<CommentResponse> getCommentsByRecipeId(Long recipeId) {
         List<Comment> comments = commentRepository.findByRecipeId(recipeId);
-        return comments.isEmpty() ? null : comments.stream().map(Comment::getContent).toList();
+
+        return comments.isEmpty() ? List.of() : comments.stream()
+                .map(comment -> {
+                    Users user = userRepository.findById(comment.getUserId()).orElse(null);
+                    return new CommentResponse(comment, user);
+                })
+                .toList();
     }
 
     @Override
@@ -116,7 +126,7 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public void moderateRecipe(Long recipeId, Long actionId) {
         Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new RuntimeException("Recipe not found"));
+                .orElseThrow(() -> new NotFoundException("Recipe not found"));
 
         RecipeStatus status = RecipeStatus.fromValue(actionId);
 

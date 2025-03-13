@@ -10,10 +10,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import java.util.List;
 
 public interface UserService extends UserDetailsService {
+    List<UserResponse> getAllUsers();
     UserResponse getSelfProfile(String authHeader, Authentication authentication);
     UserResponse getUserProfile(Long id);
     UserResponse registerUser(UserRequest request);
-    List<UserResponse> registerUsers(List<UserRequest> requests);
     UserResponse updateUser(Long id, UserRequest request);
     JwtTokenResponse updatePassword(String authHeader, Authentication authentication, PasswordUpdateRequest request);
     void deleteUser(Long id);

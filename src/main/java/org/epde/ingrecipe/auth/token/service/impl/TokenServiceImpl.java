@@ -56,7 +56,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public String extractTokenExpiration(String token) {
         RevokedToken revokedToken = repository.findByToken(token);
-        return revokedToken != null ? UtilityHelper.format(revokedToken.getExpiresAt()) : "Expired/Invalid Token";
+        return revokedToken != null ? UtilityHelper.formatDateToActualFormat(revokedToken.getExpiresAt()) : "Expired/Invalid Token";
     }
 
     @Override
@@ -91,6 +91,6 @@ public class TokenServiceImpl implements TokenService {
 
         repository.save(revokedToken);
 
-        return new JwtTokenResponse(token, UtilityHelper.format(issuedAt), UtilityHelper.format(expiration));
+        return new JwtTokenResponse(token, UtilityHelper.formatDateBDTime(issuedAt), UtilityHelper.formatDateBDTime(expiration));
     }
 }

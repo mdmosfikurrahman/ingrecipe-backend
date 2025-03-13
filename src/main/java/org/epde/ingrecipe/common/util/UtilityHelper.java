@@ -34,21 +34,21 @@ public class UtilityHelper {
     /**
      * Format LocalDateTime in BD time zone.
      */
-    public static String format(LocalDateTime localDateTime) {
+    public static String formatDateToActualFormat(LocalDateTime localDateTime) {
         return localDateTime.format(DEFAULT_FORMATTER);
     }
 
     /**
      * Format Date in BD time zone.
      */
-    public static String format(Date date) {
-        return format(toLocalDateTime(date));
+    public static String formatDateBDTime(Date date) {
+        return formatDateToActualFormat(toLocalDateTime(date));
     }
 
     /**
      * Capitalize the first letter of a string and convert the rest to lowercase.
      */
-    public static String capitalize(String text) {
+    public static String stringCapitalize(String text) {
         if (text == null || text.isEmpty()) {
             return text;
         }

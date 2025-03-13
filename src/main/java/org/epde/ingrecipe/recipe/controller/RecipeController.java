@@ -67,9 +67,9 @@ public class RecipeController {
      * Add a comment to a recipe
      */
     @PostMapping("/comment")
-    public RestResponse<CommentResponse> addComment(@RequestBody CommentRequest request) {
+    public RestResponse<CommentResponse> addComment(@RequestHeader("Authorization") String authHeader, Authentication authentication, @RequestBody CommentRequest request) {
         commentValidator.validate(request);
-        CommentResponse response = commentService.addComment(request);
+        CommentResponse response = commentService.addComment(authHeader, authentication, request);
         return RestResponse.success(HttpStatus.OK.value(), "Comment added successfully", response);
     }
 

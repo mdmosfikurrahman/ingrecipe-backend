@@ -46,3 +46,11 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: db/changelog/data/create_table_rating.sql
+
+  - changeSet:
+      id: insert_dummy_data
+      author: mosfik
+      comment: "This changeset inserts Dummy Data"
+      changes:
+        - sqlFile:
+            path: db/changelog/data/insert_dummy_data.sql

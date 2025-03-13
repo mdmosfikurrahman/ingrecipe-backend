@@ -4,6 +4,6 @@ CREATE TABLE recipe
     title        TEXT NOT NULL,
     description  TEXT,
     instructions TEXT,
-    ratings      DOUBLE PRECISION DEFAULT 0.0,
+    ratings      NUMERIC(2,1) DEFAULT 0.0,
     status       BIGINT       NOT NULL
 );

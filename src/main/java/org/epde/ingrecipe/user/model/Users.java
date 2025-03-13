@@ -7,10 +7,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.epde.ingrecipe.auth.role.Role;
 import org.epde.ingrecipe.auth.role.RoleConverter;
+import org.epde.ingrecipe.common.util.UtilityHelper;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -36,9 +38,38 @@ public class Users implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String actualPassword;
+
     @Convert(converter = RoleConverter.class)
     @Column(nullable = false)
     private Role role;
+
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Column
+    private LocalDateTime lastLogin;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = UtilityHelper.now();
+        this.updatedAt = UtilityHelper.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = UtilityHelper.now();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

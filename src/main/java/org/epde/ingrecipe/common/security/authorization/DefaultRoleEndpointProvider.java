@@ -14,7 +14,6 @@ public class DefaultRoleEndpointProvider implements RoleEndpointProvider {
         return List.of(
                 "/auth/login/**",
                 "/users/register/**",
-                "/users/batch-register/**",
                 "/recipes",
                 "/recipes/search"
         );

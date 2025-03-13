@@ -14,9 +14,9 @@ public class RecipeResponse {
     private List<String> ingredients;
     private String instructions;
     private double rating;
-    private List<String> comments;
+    private List<CommentResponse> comments;
 
-    public RecipeResponse(Recipe recipe, List<String> comments) {
+    public RecipeResponse(Recipe recipe, List<CommentResponse> comments) {
         this.id = recipe.getId();
         this.title = recipe.getTitle();
         this.description = recipe.getDescription();
@@ -25,6 +25,6 @@ public class RecipeResponse {
                 .toList();
         this.instructions = recipe.getInstructions();
         this.rating = recipe.getRatings();
-        this.comments = comments;  // If no comments exist, it will be null.
+        this.comments = comments;
     }
 }
